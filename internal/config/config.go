@@ -8,9 +8,17 @@ import (
 )
 
 type Config struct {
+	OmiseClientConfig OmiseClientConfig
+	FileSourceConfig  FileSourceConfig
+}
+
+type OmiseClientConfig struct {
 	OmisePublicKey string
 	OmiseSecretKey string
-	FilePath       string
+}
+
+type FileSourceConfig struct {
+	FilePath string
 }
 
 func TryGetConfig() (*Config, error) {
@@ -38,9 +46,13 @@ func TryGetConfig() (*Config, error) {
 	}
 
 	return &Config{
-		OmisePublicKey: *pubKeyPtr,
-		OmiseSecretKey: *secretKeyPtr,
-		FilePath:       filePath,
+		OmiseClientConfig: OmiseClientConfig{
+			OmisePublicKey: *pubKeyPtr,
+			OmiseSecretKey: *secretKeyPtr,
+		},
+		FileSourceConfig: FileSourceConfig{
+			FilePath: filePath,
+		},
 	}, nil
 }
 
