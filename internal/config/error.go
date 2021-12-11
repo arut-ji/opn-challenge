@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type MissingRequiredFlagsError struct {
 	isPublicKeyMissing bool
@@ -8,15 +11,15 @@ type MissingRequiredFlagsError struct {
 }
 
 func (e *MissingRequiredFlagsError) Error() string {
-	missingParams := ""
+	missingParams := make([]string, 0)
 	if e.isSecretKeyMissing {
-		missingParams += "secretKey"
+		missingParams = append(missingParams, "secretKey")
 	}
 
 	if e.isPublicKeyMissing {
-		missingParams += "publicKey"
+		missingParams = append(missingParams, "publicKey")
 	}
-	return fmt.Sprintf("missing required flags: %v", missingParams)
+	return fmt.Sprintf("missing required flags: %v", strings.Join(missingParams, ","))
 }
 
 type FileDoesNotExistError struct {
