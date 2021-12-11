@@ -1,10 +1,9 @@
 package streams
 
 import (
-	"fmt"
 	"log"
 	"opn-challenge/internal/models"
-	"sync"
+	"opn-challenge/internal/service"
 )
 
 type Sink interface {
@@ -14,36 +13,26 @@ type Sink interface {
 }
 
 type DonationSummarizerSink struct {
-	mu                 *sync.Mutex
-	completedDonations []models.DonationRecord
-	faultyDonations    []models.DonationRecord
+	summarizer service.DonationSummarizer
 }
 
-func NewDonationSummarizerSink() *DonationSummarizerSink {
+func NewDonationSummarizerSink(dsr service.DonationSummarizer) Sink {
 	return &DonationSummarizerSink{
-		mu:                 &sync.Mutex{},
-		completedDonations: make([]models.DonationRecord, 1),
-		faultyDonations:    make([]models.DonationRecord, 1),
+		summarizer: dsr,
 	}
 }
 
-func (d DonationSummarizerSink) onComplete() {
-	fmt.Println("Completed")
+func (d *DonationSummarizerSink) onComplete() {
+	d.summarizer.Do()
 }
 
-func (d DonationSummarizerSink) onNext(i interface{}) {
+func (d *DonationSummarizerSink) onNext(i interface{}) {
 	result, ok := i.(models.DonationResult)
-	if !ok || result.IsFaulty {
-		d.mu.Lock()
-		d.faultyDonations = append(d.faultyDonations, result.Record)
-		d.mu.Unlock()
-	} else {
-		d.mu.Lock()
-		d.completedDonations = append(d.completedDonations, result.Record)
-		d.mu.Unlock()
+	if ok {
+		d.summarizer.AddDonationResult(result)
 	}
 }
 
-func (d DonationSummarizerSink) onError(err error) {
+func (d *DonationSummarizerSink) onError(err error) {
 	log.Fatalln(err)
 }

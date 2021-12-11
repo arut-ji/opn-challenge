@@ -32,7 +32,7 @@ func (d *DefaultDonationService) Donate(record models.DonationRecord) error {
 	}
 
 	charge, createCharge := &omise.Charge{}, &operations.CreateCharge{
-		Amount:   100000, // ฿ 1,000.00
+		Amount:   record.AmountSubunits,
 		Currency: "thb",
 		Card:     card.ID,
 	}

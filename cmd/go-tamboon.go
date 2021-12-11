@@ -15,14 +15,17 @@ func Execute() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	csvSource := streams.NewCSVSource(&rootConfig.FileSourceConfig)
-	summarizerSink := streams.NewDonationSummarizerSink()
+
 	omiseClient, err := client.NewOmiseClient(&rootConfig.OmiseClientConfig)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	donationSrv := service.NewDefaultDonationService(omiseClient)
+	summarizerSrv := service.NewDefaultDonationSummarizer()
+
+	csvSource := streams.NewCSVSource(&rootConfig.FileSourceConfig)
+	summarizerSink := streams.NewDonationSummarizerSink(summarizerSrv)
 
 	donationPipeline := streams.NewDonationPipeline(csvSource, summarizerSink, donationSrv)
 

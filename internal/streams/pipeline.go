@@ -24,13 +24,16 @@ func NewDonationPipeline(source Source, sink Sink, donationSrv service.DonationS
 
 func (p *DonationPipeline) Run(_ context.Context) {
 	flow := p.materializeFlow()
-	<-flow.ForEach(p.sink.onNext, p.sink.onError, p.sink.onComplete)
+	<-flow.ForEach(p.sink.onNext, p.sink.onError, p.sink.onComplete, rxgo.WithBackPressureStrategy(rxgo.Block))
 }
 
 func (p *DonationPipeline) materializeFlow() rxgo.Observable {
+	interval := rxgo.Interval(rxgo.WithDuration(1 * time.Second))
 	return p.source.
 		Materialize().
-		BufferWithTime(rxgo.WithDuration(1*time.Second)).
+		Take(16).
+		BufferWithCount(8).
+		ZipFromIterable(interval, TakeFirst).
 		FlatMap(Flatten).
 		Map(p.makeDonation, rxgo.WithCPUPool())
 }

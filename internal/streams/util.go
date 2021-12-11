@@ -1,11 +1,14 @@
 package streams
 
 import (
+	"context"
 	"github.com/reactivex/rxgo/v2"
-	"opn-challenge/internal/models"
 )
 
 func Flatten(item rxgo.Item) rxgo.Observable {
-	records, _ := item.V.([]models.DonationRecord)
-	return rxgo.Just(records)()
+	return rxgo.Just(item.V)()
+}
+
+func TakeFirst(_ context.Context, i interface{}, _ interface{}) (interface{}, error) {
+	return i, nil
 }

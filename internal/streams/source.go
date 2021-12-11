@@ -58,7 +58,6 @@ func (s *CSVSource) Materialize() rxgo.Observable {
 			if err != nil {
 				continue
 			}
-
 			recordCh <- rxgo.Of(donationRecord)
 		}
 	}(recordCh)
