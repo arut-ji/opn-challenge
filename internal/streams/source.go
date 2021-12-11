@@ -8,7 +8,6 @@ import (
 	"opn-challenge/internal/config"
 	"opn-challenge/internal/models"
 	"os"
-	"strconv"
 )
 
 type Source interface {
@@ -44,7 +43,10 @@ func (s *CSVSource) Materialize() rxgo.Observable {
 		for {
 			record, err := csvReader.Read()
 
+			var donationRecord models.DonationRecord
+
 			if err == io.EOF {
+				recordCh <- rxgo.Of(record)
 				close(recordCh)
 				break
 			}
@@ -52,36 +54,14 @@ func (s *CSVSource) Materialize() rxgo.Observable {
 				continue
 			}
 
-			name := record[0]
-			amountSubunits, err := strconv.ParseInt(record[1], 10, 64)
-			if err != nil {
-				continue
-			}
-			ccNumber := record[2]
-			ccv, err := strconv.ParseInt(record[3], 10, 64)
-			if err != nil {
-				continue
-			}
-			expMonth, err := strconv.ParseInt(record[4], 10, 64)
-			if err != nil {
-				continue
-			}
-			expYear, err := strconv.ParseInt(record[5], 10, 64)
+			err = models.UnmarshalFromCSV(record, &donationRecord)
 			if err != nil {
 				continue
 			}
 
-			donation := models.DonationRecord{
-				Name:           name,
-				AmountSubunits: amountSubunits,
-				CCNumber:       ccNumber,
-				CCV:            ccv,
-				ExpMonth:       expMonth,
-				ExpYear:        expYear,
-			}
-			recordCh <- rxgo.Of(donation)
+			recordCh <- rxgo.Of(donationRecord)
 		}
 	}(recordCh)
 
-	return rxgo.FromChannel(recordCh, rxgo.WithBackPressureStrategy(rxgo.Block), rxgo.WithPublishStrategy())
+	return rxgo.FromChannel(recordCh, rxgo.WithBackPressureStrategy(rxgo.Block))
 }

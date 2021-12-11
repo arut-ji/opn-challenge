@@ -19,6 +19,14 @@ type DonationSummarizerSink struct {
 	faultyDonations    []models.DonationRecord
 }
 
+func NewDonationSummarizerSink() *DonationSummarizerSink {
+	return &DonationSummarizerSink{
+		mu:                 &sync.Mutex{},
+		completedDonations: make([]models.DonationRecord, 1),
+		faultyDonations:    make([]models.DonationRecord, 1),
+	}
+}
+
 func (d DonationSummarizerSink) onComplete() {
 	fmt.Println("Completed")
 }

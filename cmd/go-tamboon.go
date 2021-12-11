@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"opn-challenge/internal/client"
 	"opn-challenge/internal/config"
-	"opn-challenge/internal/models"
+	"opn-challenge/internal/service"
 	"opn-challenge/internal/streams"
 )
 
@@ -16,19 +16,15 @@ func Execute() {
 		log.Fatalln(err)
 	}
 	csvSource := streams.NewCSVSource(&rootConfig.FileSourceConfig)
-	source := csvSource.Materialize()
+	summarizerSink := streams.NewDonationSummarizerSink()
+	omiseClient, err := client.NewOmiseClient(&rootConfig.OmiseClientConfig)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	source.
-		Take(5).
-		ForEach(func(i interface{}) {
-			log.Println(i.(models.DonationRecord))
-		}, func(err error) {
-			log.Println(err)
-		}, func() {
-			fmt.Println("Completed")
-		})
+	donationSrv := service.NewDefaultDonationService(omiseClient)
 
-	pipeLineCtx, _ := source.Connect(ctx)
+	donationPipeline := streams.NewDonationPipeline(csvSource, summarizerSink, donationSrv)
 
-	<-pipeLineCtx.Done()
+	donationPipeline.Run(ctx)
 }
