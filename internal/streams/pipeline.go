@@ -2,6 +2,7 @@ package streams
 
 import (
 	"context"
+	"fmt"
 	"github.com/reactivex/rxgo/v2"
 	"opn-challenge/internal/models"
 	"opn-challenge/internal/service"
@@ -23,19 +24,19 @@ func NewDonationPipeline(source Source, sink Sink, donationSrv service.DonationS
 }
 
 func (p *DonationPipeline) Run(_ context.Context) {
+	fmt.Println("performing donations...")
 	flow := p.materializeFlow()
-	<-flow.ForEach(p.sink.onNext, p.sink.onError, p.sink.onComplete, rxgo.WithBackPressureStrategy(rxgo.Block))
+	<-flow.ForEach(p.sink.onNext, p.sink.onError, p.sink.onComplete)
 }
 
 func (p *DonationPipeline) materializeFlow() rxgo.Observable {
-	interval := rxgo.Interval(rxgo.WithDuration(1 * time.Second))
+	interval := rxgo.Interval(rxgo.WithDuration(200 * time.Millisecond))
+
 	return p.source.
 		Materialize().
-		Take(16).
-		BufferWithCount(8).
 		ZipFromIterable(interval, TakeFirst).
 		FlatMap(Flatten).
-		Map(p.makeDonation, rxgo.WithCPUPool())
+		Map(p.makeDonation, rxgo.WithCPUPool(), rxgo.WithBackPressureStrategy(rxgo.Block))
 }
 
 func (p *DonationPipeline) makeDonation(_ context.Context, i interface{}) (interface{}, error) {

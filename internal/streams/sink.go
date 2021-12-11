@@ -1,6 +1,7 @@
 package streams
 
 import (
+	"fmt"
 	"log"
 	"opn-challenge/internal/models"
 	"opn-challenge/internal/service"
@@ -23,6 +24,7 @@ func NewDonationSummarizerSink(dsr service.DonationSummarizer) Sink {
 }
 
 func (d *DonationSummarizerSink) onComplete() {
+	fmt.Println("done.")
 	d.summarizer.Do()
 }
 
@@ -34,5 +36,5 @@ func (d *DonationSummarizerSink) onNext(i interface{}) {
 }
 
 func (d *DonationSummarizerSink) onError(err error) {
-	log.Fatalln(err)
+	log.Println(err)
 }

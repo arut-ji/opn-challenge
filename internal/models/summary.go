@@ -16,6 +16,15 @@ func (l *LeaderBoard) Challenge(record DonationRecord) {
 	l.challenge(record, 0)
 }
 
+func (l *LeaderBoard) GetTopDonors() []string {
+
+	topDonors := make([]string, l.numberOfPlaces)
+	for i, v := range l.places {
+		topDonors[i] = v.Name
+	}
+	return topDonors
+}
+
 func (l *LeaderBoard) challenge(record DonationRecord, currentIdx int) {
 	if currentIdx >= l.numberOfPlaces {
 		return
